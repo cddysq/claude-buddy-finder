@@ -1,0 +1,2216 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>Claude Code Buddy - 电子宠物 ID 计算器</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐾</text></svg>">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #09090b;
+    --card-bg: rgba(24, 24, 27, 0.7);
+    --card-border: rgba(255, 255, 255, 0.1);
+    --text: #f4f4f5;
+    --muted: #a1a1aa;
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --chip: rgba(255, 255, 255, 0.05);
+    --chip-border: rgba(255, 255, 255, 0.1);
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --focus-ring: rgba(99, 102, 241, 0.3);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    max-width: 1760px;
+    margin: 0 auto;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at top left, rgba(99, 102, 241, 0.12), transparent 40%),
+      radial-gradient(circle at bottom right, rgba(167, 139, 250, 0.12), transparent 40%);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 40px clamp(20px, 2.4vw, 40px);
+    line-height: 1.5;
+  }
+
+  .page-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(420px, 460px);
+    gap: 28px;
+    align-items: start;
+  }
+  .main-column {
+    min-width: 0;
+  }
+  .side-column {
+    min-width: 0;
+    position: sticky;
+    top: 24px;
+  }
+
+  h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #818cf8, #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.02em;
+  }
+
+  .sub {
+    color: var(--muted);
+    font-size: 1rem;
+    text-align: center;
+    margin-bottom: 40px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .guide-card {
+    padding: 20px 22px;
+    margin: 0;
+  }
+  .guide-card[open] {
+    background: linear-gradient(180deg, rgba(32, 32, 38, 0.92), rgba(24, 24, 27, 0.72));
+  }
+  .guide-summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+  }
+  .guide-summary::-webkit-details-marker { display: none; }
+  .guide-title {
+    color: var(--text);
+    flex: 1;
+    min-width: 0;
+    font-size: 1rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+  .guide-chevron {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    border: 1px solid rgba(129, 140, 248, 0.18);
+    background: rgba(99, 102, 241, 0.08);
+    color: #c7d2fe;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    flex-shrink: 0;
+  }
+  .guide-chevron svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    transition: transform 0.2s ease;
+  }
+  .guide-card:hover .guide-chevron {
+    border-color: rgba(129, 140, 248, 0.32);
+    background: rgba(99, 102, 241, 0.14);
+  }
+  .guide-card[open] .guide-chevron {
+    color: #eef2ff;
+  }
+  .guide-card[open] .guide-chevron svg {
+    transform: rotate(180deg);
+  }
+  .guide-body {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--card-border);
+  }
+  .guide-alert {
+    margin-bottom: 16px;
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(244, 114, 182, 0.24);
+    background:
+      linear-gradient(180deg, rgba(60, 18, 47, 0.24), rgba(32, 16, 27, 0.12)),
+      rgba(255, 255, 255, 0.02);
+  }
+  .guide-alert-title {
+    color: #fbcfe8;
+    font-size: 0.88rem;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+  .guide-alert-body {
+    margin-top: 8px;
+    color: #d4d4d8;
+    font-size: 0.84rem;
+    line-height: 1.6;
+  }
+  .guide-alert-actions {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .guide-alert-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .guide-steps {
+    display: grid;
+    gap: 12px;
+  }
+  .guide-step {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+  }
+  .guide-step-index {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(99, 102, 241, 0.16);
+    border: 1px solid rgba(129, 140, 248, 0.24);
+    color: #c7d2fe;
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+  .guide-step-body {
+    color: var(--muted);
+    font-size: 0.88rem;
+    line-height: 1.65;
+  }
+  .guide-step-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .guide-step-body strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .guide-copy-inline {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+    vertical-align: middle;
+  }
+  .inline-code {
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid rgba(129, 140, 248, 0.24);
+    background: rgba(99, 102, 241, 0.14);
+    color: #e9d5ff;
+    font-size: 0.88em;
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  .inline-code-wrap {
+    display: inline-block;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    border-radius: 12px;
+  }
+  .guide-status-text {
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    color: #e4e4e7;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 2px 8px;
+  }
+  .guide-copy-btn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: 999px;
+    border: 1px solid rgba(129, 140, 248, 0.2);
+    background: rgba(255,255,255,0.04);
+    color: #c7d2fe;
+    font-size: 0.78rem;
+    line-height: 1;
+    box-shadow: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .guide-copy-btn::before {
+    content: '';
+    width: 14px;
+    height: 14px;
+    display: block;
+    background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='1.9'%3E%3Crect x='9' y='9' width='10' height='10' rx='2'/%3E%3Cpath d='M7 15H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='1.9'%3E%3Crect x='9' y='9' width='10' height='10' rx='2'/%3E%3Cpath d='M7 15H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  .guide-copy-btn:hover:not(:disabled) {
+    transform: none;
+    background: rgba(99, 102, 241, 0.14);
+    border-color: rgba(129, 140, 248, 0.34);
+    box-shadow: none;
+  }
+  .guide-copy-btn.is-copied {
+    color: #bbf7d0;
+    border-color: rgba(74, 222, 128, 0.35);
+    background: rgba(34, 197, 94, 0.16);
+  }
+  .guide-code-panel {
+    margin-top: 10px;
+    border-radius: 14px;
+    border: 1px solid rgba(129, 140, 248, 0.16);
+    background: rgba(7, 10, 17, 0.82);
+    overflow: hidden;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  .guide-code-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.03);
+  }
+  .guide-code-title {
+    color: #a5b4fc;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .guide-pre {
+    margin: 0;
+    padding: 10px 12px;
+    color: #e4e4e7;
+    font-size: 0.77rem;
+    line-height: 1.55;
+    white-space: pre;
+    overflow-x: auto;
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+  }
+  .guide-code-key { color: #c4b5fd; }
+  .guide-code-string { color: #f9a8d4; }
+  .guide-code-number { color: #93c5fd; }
+  .guide-code-punc { color: #94a3b8; }
+  .guide-code-indent { color: transparent; user-select: none; }
+  .guide-code-line {
+    display: block;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  label, .group-label {
+    display: block;
+    color: var(--text);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  select, input[type="number"], input[type="text"] {
+    appearance: none;
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    width: 100%;
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    font-family: inherit;
+  }
+
+  select {
+    padding-right: 40px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a1a1aa'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-position: right 14px center;
+    background-size: 16px;
+    background-repeat: no-repeat;
+  }
+
+  select:focus, input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background-color: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 0 4px var(--focus-ring);
+  }
+
+  select option {
+    background-color: #18181b;
+    color: var(--text);
+  }
+
+  .split-layout { display: flex; gap: 24px; align-items: stretch; margin-bottom: 20px; }
+  .split-left { flex: 1; min-width: 0; }
+  .split-right { flex: 0 0 420px; min-width: 0; }
+
+  .row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .btns {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+    border-top: 1px solid var(--card-border);
+    padding-top: 24px;
+  }
+
+  button {
+    padding: 12px 24px;
+    border-radius: var(--radius-md);
+    border: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+  }
+
+  button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  button:active:not(:disabled) { transform: translateY(0); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  #btnStart { background: var(--primary); color: #fff; }
+  #btnStart:hover:not(:disabled) { background: var(--primary-hover); }
+  #btnStop { background: #ef4444; color: #fff; }
+  #btnClear { background: transparent; color: var(--text); border: 1px solid var(--card-border); }
+  #btnClear:hover:not(:disabled) { background: rgba(255,255,255,0.05); }
+
+  .progress-bar { background: rgba(0,0,0,0.4); border-radius: 99px; height: 8px; margin: 16px 0; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #818cf8, #c084fc); transition: width 0.3s ease; width: 0; }
+
+  .stats {
+    display: flex;
+    align-items: center;
+    gap: 12px 18px;
+    flex-wrap: wrap;
+    font-size: 0.92rem;
+    color: var(--muted);
+  }
+  .stat-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .stats-label {
+    color: var(--muted);
+  }
+  .stats-value {
+    color: var(--text);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .stats-separator {
+    color: rgba(255,255,255,0.16);
+  }
+
+  #log {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    height: 320px;
+    overflow-y: auto;
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+  #log::-webkit-scrollbar { width: 8px; }
+  #log::-webkit-scrollbar-track { background: transparent; }
+  #log::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+  #log::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+  .log-found { color: #4ade80; }
+  .log-shiny { color: #fbbf24; font-weight: bold; }
+  .log-info { color: var(--muted); }
+  .log-err { color: #f87171; }
+
+  .result-item, .preview-card {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    display: flex;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .result-item {
+    gap: 32px;
+    align-items: stretch;
+  }
+  .result-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(255,255,255,0.15);
+  }
+  .preview-card {
+    background: linear-gradient(145deg, rgba(30,30,35,0.9), rgba(15,15,20,0.8));
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 20px;
+  }
+  .preview-card .info-area {
+    align-items: center;
+    width: 100%;
+  }
+  .preview-card .section-title {
+    width: 100%;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+  }
+  .preview-card .detail-rows {
+    justify-content: center;
+    gap: 8px 16px;
+    margin-bottom: 12px;
+  }
+  .result-main { display: flex; gap: 32px; flex: 1; align-items: flex-start; }
+  .sprite-area { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; min-width: 120px; }
+  .info-area { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+  .uid { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; color: #a5b4fc; background: rgba(99,102,241,0.15); padding: 4px 8px; border-radius: 6px; font-size: 0.9rem; letter-spacing: 0.02em; }
+
+  .badge, .rarity-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .legendary, .rarity-legendary { background: rgba(251,191,36,0.1); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+  .epic, .rarity-epic { background: rgba(167,139,250,0.1); color: #c084fc; border: 1px solid rgba(167,139,250,0.25); }
+  .rare, .rarity-rare { background: rgba(96,165,250,0.1); color: #60a5fa; border: 1px solid rgba(96,165,250,0.25); }
+  .uncommon, .rarity-uncommon { background: rgba(74,222,128,0.1); color: #4ade80; border: 1px solid rgba(74,222,128,0.25); }
+  .common, .rarity-common { background: rgba(156,163,175,0.1); color: #9ca3af; border: 1px solid rgba(156,163,175,0.25); }
+
+  .shiny-badge { font-size: 0.85rem; font-weight: 800; color: #fbbf24; animation: pulse 2s infinite; text-align: center; text-shadow: 0 0 10px rgba(251,191,36,0.4); }
+
+  .copy-btn {
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+    border: 1px solid var(--card-border);
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    margin-top: auto;
+  }
+  .copy-btn:hover { background: rgba(255,255,255,0.1); }
+
+  .section-title { font-size: 1.25rem; font-weight: 600; color: #fff; margin-bottom: 20px; letter-spacing: -0.01em; }
+
+  .warning {
+    background: rgba(99, 102, 241, 0.1);
+    border-left: 4px solid var(--primary);
+    padding: 16px 20px;
+    font-size: 0.9rem;
+    color: #c7d2fe;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  .field-help { color: var(--muted); font-size: 0.8rem; margin: -8px 0 12px; line-height: 1.55; }
+  .solver-hint {
+    margin: -8px 0 20px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+  }
+  .solver-hint.is-ok {
+    border-color: rgba(74, 222, 128, 0.24);
+    background: rgba(74, 222, 128, 0.08);
+  }
+  .solver-hint.is-error {
+    border-color: rgba(248, 113, 113, 0.26);
+    background: rgba(127, 29, 29, 0.18);
+  }
+  .solver-hint-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .solver-hint-body {
+    margin-top: 6px;
+    color: #e4e4e7;
+    font-size: 0.84rem;
+    line-height: 1.6;
+  }
+  .solver-hint-meta {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    line-height: 1.55;
+  }
+
+  .chip-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+  .chip {
+    background: var(--chip);
+    color: var(--muted);
+    border: 1px solid var(--chip-border);
+    border-radius: 99px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .chip:hover { border-color: rgba(255,255,255,0.2); color: var(--text); background: rgba(255,255,255,0.08); }
+  .chip.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 0 12px rgba(99,102,241,0.3); }
+
+  .stat-range-grid { display: grid; gap: 12px; margin-bottom: 20px; }
+  .stat-range-row {
+    display: flex;
+    align-items: center;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-md);
+    padding: 8px 16px;
+    gap: 16px;
+    transition: border-color 0.2s ease;
+    min-height: 48px;
+  }
+  .stat-range-row:hover { border-color: rgba(255,255,255,0.15); }
+  .stat-range-name { flex: 0 0 168px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin: 0; }
+  .stat-range-name-text { font-weight: 600; font-size: 0.85rem; color: var(--text); line-height: 1; }
+  .stat-range-role { display: flex; flex-wrap: wrap; gap: 6px; min-height: 24px; }
+  .stat-role-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+    color: var(--muted);
+    font-size: 0.74rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .stat-role-chip.is-peak { color: #fbbf24; border-color: rgba(251,191,36,0.22); background: rgba(251,191,36,0.08); }
+  .stat-role-chip.is-normal { color: #93c5fd; border-color: rgba(96,165,250,0.2); background: rgba(96,165,250,0.08); }
+  .stat-role-chip.is-dump { color: #f9a8d4; border-color: rgba(244,114,182,0.2); background: rgba(244,114,182,0.08); }
+  .stat-role-chip.is-empty { color: #fca5a5; border-color: rgba(248,113,113,0.18); background: rgba(127,29,29,0.16); }
+  .stat-range-fields { display: flex; align-items: center; gap: 12px; flex: 1; height: 100%; }
+  .stat-range-bound { display: flex; align-items: center; gap: 8px; height: 100%; }
+  .stat-range-bound-label { font-size: 0.85rem; color: var(--muted); font-weight: 500; line-height: 1; margin: 0; display: flex; align-items: center; }
+  .stat-range-input { width: 80px; margin: 0 !important; padding: 6px 10px; text-align: center; font-variant-numeric: tabular-nums; display: block; box-sizing: border-box; }
+  .stat-range-separator { color: var(--muted); padding: 0 4px; line-height: 1; margin: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+
+  .detail-rows { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 32px; margin-bottom: 20px; font-size: 0.9rem; color: var(--text); }
+  .detail-rows span.label { color: var(--muted); font-weight: 500; margin-right: 6px; }
+
+  .result-zh, .preview-zh { font-size: 0.9rem; color: #a5b4fc; margin-bottom: 20px; font-weight: 500; }
+
+  .result-stats { display: flex; flex-direction: column; gap: 10px; }
+  .stat-line { display: flex; align-items: center; gap: 16px; font-size: 0.85rem; }
+  .stat-line-label { width: 110px; color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+  .stat-line-value { width: 40px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stat-line-value.is-max { color: #4ade80; text-shadow: 0 0 8px rgba(74,222,128,0.3); }
+  .stat-bar { flex: 1; height: 8px; background: rgba(0,0,0,0.4); border-radius: 99px; overflow: hidden; }
+  .stat-bar-fill { display: block; height: 100%; border-radius: 99px; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: inset 0 2px 4px rgba(255,255,255,0.1); }
+
+  .preview-stage, .preview-mini { display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.2); border-radius: var(--radius-md); padding: 16px; border: 1px solid var(--card-border); }
+  .buddy-ascii { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 1.15rem; line-height: 1.2; white-space: pre; color: var(--text); margin: 0; text-align: left; }
+  .preview-mini .buddy-ascii { font-size: 0.7rem; }
+  .species-name { font-size: 1.75rem; font-weight: 700; color: #fff; text-transform: capitalize; margin-bottom: 12px; letter-spacing: -0.02em; }
+
+  .sprite-common { color: #d1d5db; }
+  .sprite-uncommon { color: #4ade80; }
+  .sprite-rare { color: #60a5fa; }
+  .sprite-epic { color: #c084fc; }
+  .sprite-legendary { color: #fbbf24; text-shadow: 0 0 10px rgba(251,191,36,0.3); }
+  .shiny-sprite { animation: float 3s ease-in-out infinite, pulse 2s infinite; }
+
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  @keyframes pulse { 0%, 100% { filter: drop-shadow(0 0 6px currentColor); } 50% { filter: drop-shadow(0 0 16px currentColor) brightness(1.25); } }
+
+  @media (max-width: 1280px) {
+    .page-shell {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    .side-column {
+      position: static;
+      order: -1;
+    }
+  }
+
+  @media (max-width: 768px) {
+    body { padding: 20px 16px; }
+    .card, .guide-card { padding: 24px 20px; }
+    .guide-alert { padding: 12px; }
+    .guide-step {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .guide-step-line {
+      gap: 6px;
+    }
+    .guide-copy-inline {
+      flex-wrap: wrap;
+    }
+    .guide-code-toolbar {
+      padding: 10px;
+    }
+    .guide-pre {
+      padding: 12px;
+      font-size: 0.76rem;
+    }
+    .stats {
+      gap: 10px 14px;
+    }
+    .stat-item {
+      flex: 1 1 calc(50% - 14px);
+    }
+    .stats-separator {
+      display: none;
+    }
+    .result-item, .preview-card, .result-main { flex-direction: column; gap: 24px; }
+    .stat-range-row { grid-template-columns: 1fr; gap: 12px; padding: 16px; }
+    .stat-range-name { min-width: 0; margin-bottom: 0; }
+    .stat-range-fields { gap: 12px; }
+    .stat-range-bound { flex: 1 1 160px; justify-content: space-between; }
+    .stat-range-input { width: 120px; }
+    .stat-range-separator { display: none; }
+    .split-layout { flex-direction: column; }
+    .split-right { flex: auto; width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Claude Code Buddy</h1>
+<div class="sub">不要让冰冷的概率，阻挡你们相遇的缘分</div>
+
+<div class="page-shell">
+<div class="main-column">
+<div class="card">
+  <div class="row">
+    <div>
+      <label for="targetRarity">目标稀有度</label>
+      <select id="targetRarity">
+        <option value="any" selected>任意</option>
+        <option value="common">普通 Common (60%)</option>
+        <option value="uncommon">不凡 Uncommon (25%)</option>
+        <option value="rare">稀有 Rare (10%)</option>
+        <option value="epic">史诗 Epic (4%)</option>
+        <option value="legendary">传说 Legendary (1%)</option>
+      </select>
+    </div>
+    <div>
+      <label for="targetShiny">闪光 Shiny（独立 1%）</label>
+      <select id="targetShiny">
+        <option value="any">任意</option>
+        <option value="true">仅闪光 ✨</option>
+        <option value="false">非闪光</option>
+      </select>
+    </div>
+  </div>
+  <div class="row">
+    <div>
+      <label for="hashMode">哈希算法</label>
+      <select id="hashMode">
+        <option value="bun" selected>🔥 Bun.hash / wyhash（原生安装、brew）</option>
+        <option value="fnv">📦 FNV-1a（npm / Node.js）</option>
+      </select>
+    </div>
+    <div>
+      <label for="searchMode">候选 ID 形态</label>
+      <select id="searchMode">
+        <option value="randomHex" selected>64 位十六进制（推荐，最适合直接使用）</option>
+        <option value="short">短 ID（a-z0-9，1 到 4 位）</option>
+        <option value="numbers">纯数字（1 到 9999999）</option>
+      </select>
+    </div>
+  </div>
+  <div class="warning">说明：候选 ID 形态只决定生成出来的 ID 长什么样，不会改变电子宠物算法。</div>
+  <div class="row">
+    <div>
+      <label for="maxResults">最多结果数</label>
+      <select id="maxResults">
+        <option value="1">1 个</option>
+        <option value="5" selected>5 个</option>
+        <option value="10">10 个</option>
+        <option value="20">20 个</option>
+        <option value="50">50 个</option>
+        <option value="100">100 个</option>
+      </select>
+    </div>
+  </div>
+  <div class="group-label">生物种类</div>
+  <div class="chip-group" id="targetSpecies"></div>
+  <div class="group-label">帽子种类</div>
+  <div class="chip-group" id="targetHat"></div>
+  <div class="group-label">眼睛种类</div>
+  <div class="chip-group" id="targetEye"></div>
+  <div class="split-layout">
+    <div class="split-left">
+      <div class="group-label">属性区间筛选</div>
+      <div class="stat-range-grid" id="statRangeFilters"></div>
+      <div class="field-help" id="statRangeHelp">算法固定为 1 个高峰属性 + 3 个常规属性 + 1 个低谷属性</div>
+      <div class="solver-hint is-ok" id="feasibilityHint" aria-live="polite">
+        <div class="solver-hint-title" id="feasibilityTitle">当前条件可达</div>
+        <div class="solver-hint-body" id="feasibilityBody"></div>
+        <div class="solver-hint-meta" id="feasibilityMeta"></div>
+      </div>
+    </div>
+    <div class="split-right">
+      <div class="card preview-card" style="margin-bottom: 0; height: 100%;">
+        <div class="sprite-area">
+          <div class="preview-stage" id="previewStage"></div>
+          <div id="previewShinyBadge" class="shiny-badge" style="display:none">✨ SHINY ✨</div>
+        </div>
+        <div class="preview-meta info-area">
+          <div class="section-title">即时预览</div>
+          <div class="preview-name species-name" id="previewName">duck</div>
+          <div class="rarity-badge" id="previewRarityBadge">★★★★★ legendary</div>
+          <div class="preview-sub detail-rows" id="previewSub"></div>
+          <div class="preview-zh" id="previewZh">生物：鸭子　帽子：无</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="btns">
+    <button id="btnStart">▶ 开始搜索</button>
+    <button id="btnStop" disabled>⏹ 停止</button>
+    <button id="btnClear">🗑 清空结果</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="stats">
+    <div class="stat-item"><span class="stats-label">已尝试:</span><span class="stats-value" id="statTried">0</span></div>
+    <span class="stats-separator">|</span>
+    <div class="stat-item"><span class="stats-label">已找到:</span><span class="stats-value" id="statFound">0</span></div>
+    <span class="stats-separator">|</span>
+    <div class="stat-item"><span class="stats-label">速度:</span><span class="stats-value" id="statSpeed">0</span><span class="stats-label">/s</span></div>
+    <span class="stats-separator">|</span>
+    <div class="stat-item"><span class="stats-label">状态:</span><span class="stats-value" id="statStatus">待机</span></div>
+    <span class="stats-separator">|</span>
+    <div class="stat-item"><span class="stats-label">耗时:</span><span class="stats-value" id="statElapsed">0ms</span></div>
+  </div>
+</div>
+
+<div class="card" id="results">
+  <div class="section-title">搜索结果</div>
+  <div id="resultList"><p class="log-info" style="font-size:0.85em">暂无结果，点击「开始搜索」</p></div>
+</div>
+
+<div class="card">
+  <div class="section-title">日志</div>
+  <div id="log"></div>
+</div>
+</div>
+
+<aside class="side-column">
+  <details class="card guide-card" id="usageGuide" open>
+    <summary class="guide-summary">
+      <div class="guide-title">配置说明</div>
+      <div class="guide-chevron" aria-hidden="true">
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M5 8l5 5 5-5"></path>
+        </svg>
+      </div>
+    </summary>
+    <div class="guide-body" id="guideBody"></div>
+  </details>
+</aside>
+</div>
+
+<script>
+// ── 算法核心 ─────────────────────────────────────────────
+
+// FNV-1a 32bit — 当前版本已知与现有稀有度结果更一致
+function hashFnv1a(str) {
+  let h = 0x811c9dc5
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i)
+    h = Math.imul(h, 0x01000193) >>> 0
+  }
+  return h >>> 0
+}
+
+// wyhash 实现，用于对齐 Bun.hash 的低 32 位结果。
+const _wyp = [0xa0761d6478bd642fn, 0xe7037ed1a0b428dbn, 0x8ebc6af09c88c6e3n, 0x589965cc75374cc3n]
+const _M64 = 0xFFFFFFFFFFFFFFFFn
+const _textEnc = new TextEncoder()
+
+function _wymum(a, b) {
+  const r = (a & _M64) * (b & _M64)
+  return [r & _M64, (r >> 64n) & _M64]
+}
+
+function _wymix(a, b) {
+  const [lo, hi] = _wymum(a, b)
+  return (lo ^ hi) & _M64
+}
+
+function _wyr8(d, o) {
+  return BigInt(d[o]) | (BigInt(d[o + 1]) << 8n) | (BigInt(d[o + 2]) << 16n) | (BigInt(d[o + 3]) << 24n) |
+         (BigInt(d[o + 4]) << 32n) | (BigInt(d[o + 5]) << 40n) | (BigInt(d[o + 6]) << 48n) | (BigInt(d[o + 7]) << 56n)
+}
+
+function _wyr4(d, o) {
+  return BigInt(d[o]) | (BigInt(d[o + 1]) << 8n) | (BigInt(d[o + 2]) << 16n) | (BigInt(d[o + 3]) << 24n)
+}
+
+function _wyr3(d, k) {
+  return (BigInt(d[0]) << 16n) | (BigInt(d[k >> 1]) << 8n) | BigInt(d[k - 1])
+}
+
+function wyhash(data, seed) {
+  const len = data.length
+  seed = (seed ^ _wymix(seed ^ _wyp[0], _wyp[1])) & _M64
+  let a, b, p = 0, i = len
+
+  if (len <= 16) {
+    if (len >= 4) {
+      a = ((_wyr4(data, p) << 32n) | _wyr4(data, p + ((len >> 3) << 2))) & _M64
+      b = ((_wyr4(data, p + len - 4) << 32n) | _wyr4(data, p + len - 4 - ((len >> 3) << 2))) & _M64
+    } else if (len > 0) {
+      a = _wyr3(data, len)
+      b = 0n
+    } else {
+      a = 0n
+      b = 0n
+    }
+  } else {
+    if (i > 48) {
+      let s1 = seed
+      let s2 = seed
+      do {
+        seed = _wymix(_wyr8(data, p) ^ _wyp[1], _wyr8(data, p + 8) ^ seed)
+        s1 = _wymix(_wyr8(data, p + 16) ^ _wyp[2], _wyr8(data, p + 24) ^ s1)
+        s2 = _wymix(_wyr8(data, p + 32) ^ _wyp[3], _wyr8(data, p + 40) ^ s2)
+        p += 48
+        i -= 48
+      } while (i > 48)
+      seed = (seed ^ s1 ^ s2) & _M64
+    }
+    while (i > 16) {
+      seed = _wymix(_wyr8(data, p) ^ _wyp[1], _wyr8(data, p + 8) ^ seed)
+      i -= 16
+      p += 16
+    }
+    a = _wyr8(data, p + i - 16)
+    b = _wyr8(data, p + i - 8)
+  }
+
+  a = (a ^ _wyp[1]) & _M64
+  b = (b ^ seed) & _M64
+  const [lo, hi] = _wymum(a, b)
+  return _wymix((lo ^ _wyp[0] ^ BigInt(data.length)) & _M64, (hi ^ _wyp[1]) & _M64)
+}
+
+function hashBun(str) {
+  return Number(wyhash(_textEnc.encode(str), 0n) & 0xFFFFFFFFn)
+}
+
+function mulberry32(seed) {
+  return function () {
+    seed |= 0
+    seed = (seed + 0x6d2b79f5) | 0
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+const SPECIES = [
+  'duck','goose','blob','cat','dragon','octopus','owl','penguin','turtle',
+  'snail','ghost','axolotl','capybara','cactus','robot','rabbit','mushroom','chonk',
+]
+const EYES = ['·','✦','×','◉','@','°']
+const HATS = ['none','crown','tophat','propeller','halo','wizard','beanie','tinyduck']
+const SPECIES_ZH = {
+  duck: '鸭子', goose: '鹅', blob: '团子', cat: '猫', dragon: '龙', octopus: '章鱼',
+  owl: '猫头鹰', penguin: '企鹅', turtle: '乌龟', snail: '蜗牛', ghost: '幽灵',
+  axolotl: '美西螈', capybara: '水豚', cactus: '仙人掌', robot: '机器人', rabbit: '兔子',
+  mushroom: '蘑菇', chonk: '胖团子',
+}
+const HATS_ZH = {
+  none: '无', crown: '王冠', tophat: '高礼帽', propeller: '螺旋桨帽',
+  halo: '光环', wizard: '巫师帽', beanie: '毛线帽', tinyduck: '小黄鸭帽',
+}
+const STAT_NAMES = ['DEBUGGING','PATIENCE','CHAOS','WISDOM','SNARK']
+const RARITY_STARS = { common:'★', uncommon:'★★', rare:'★★★', epic:'★★★★', legendary:'★★★★★' }
+const RARITY_FLOOR = { common: 5, uncommon: 15, rare: 25, epic: 35, legendary: 50 }
+const RARITY_ZH = { common: '普通', uncommon: '不凡', rare: '稀有', epic: '史诗', legendary: '传说' }
+const ROLE_LABELS = { peak: '高峰', normal: '常规', dump: '低谷' }
+const ROLE_ORDER = ['peak', 'normal', 'dump']
+const STAT_COLORS = {
+  DEBUGGING: '#e06c60',
+  PATIENCE: '#58a6ff',
+  CHAOS: '#af87ff',
+  WISDOM: '#ffc107',
+  SNARK: '#4eba65',
+}
+const HAT_TOPS = {
+  none: '',
+  crown: '   \\\\^^^/    ',
+  tophat: '   [___]    ',
+  propeller: '    -+-     ',
+  halo: '   (   )    ',
+  wizard: '    /^\\\\     ',
+  beanie: '   (___)    ',
+  tinyduck: '    ,>      ',
+}
+const spriteFrames = (...frames) => frames.map(frame => frame.split('¦'))
+const SPECIES_ASCII = {
+  duck: spriteFrames(
+    '            ¦    __      ¦  <({E} )___  ¦   (  ._>   ¦    `--´    ',
+    '            ¦    __      ¦  <({E} )___  ¦   (  ._>   ¦    `--´~   ',
+    '            ¦    __      ¦  <({E} )___  ¦   (  .__>  ¦    `--´    ',
+  ),
+  goose: spriteFrames(
+    '            ¦     ({E}>    ¦     ||     ¦   _(__)_   ¦    ^^^^    ',
+    '            ¦    ({E}>     ¦     ||     ¦   _(__)_   ¦    ^^^^    ',
+    '            ¦     ({E}>>   ¦     ||     ¦   _(__)_   ¦    ^^^^    ',
+  ),
+  blob: spriteFrames(
+    '            ¦   .----.   ¦  ( {E}  {E} )  ¦  (      )  ¦   `----´   ',
+    '            ¦  .------.  ¦ (  {E}  {E}  ) ¦ (        ) ¦  `------´  ',
+    '            ¦    .--.    ¦   ({E}  {E})   ¦   (    )   ¦    `--´    ',
+  ),
+  cat: spriteFrames(
+    '            ¦   /\\_/\\    ¦  ( {E}   {E})  ¦  (  ω  )   ¦  (")_(")   ',
+    '            ¦   /\\_/\\    ¦  ( {E}   {E})  ¦  (  ω  )   ¦  (")_(")~  ',
+    '            ¦   /\\-/\\    ¦  ( {E}   {E})  ¦  (  ω  )   ¦  (")_(")   ',
+  ),
+  dragon: spriteFrames(
+    '            ¦  /^\\  /^\\  ¦ <  {E}  {E}  > ¦ (   ~~   ) ¦  `-vvvv-´  ',
+    '            ¦  /^\\  /^\\  ¦ <  {E}  {E}  > ¦ (        ) ¦  `-vvvv-´  ',
+    '   ~    ~   ¦  /^\\  /^\\  ¦ <  {E}  {E}  > ¦ (   ~~   ) ¦  `-vvvv-´  ',
+  ),
+  octopus: spriteFrames(
+    '            ¦   .----.   ¦  ( {E}  {E} )  ¦  (______)  ¦  /\\/\\/\\/\\  ',
+    '            ¦   .----.   ¦  ( {E}  {E} )  ¦  (______)  ¦  \\/\\/\\/\\/  ',
+    '     o      ¦   .----.   ¦  ( {E}  {E} )  ¦  (______)  ¦  /\\/\\/\\/\\  ',
+  ),
+  owl: spriteFrames(
+    '            ¦   /\\  /\\   ¦  (({E})({E}))  ¦  (  ><  )  ¦   `----´   ',
+    '            ¦   /\\  /\\   ¦  (({E})({E}))  ¦  (  ><  )  ¦   .----.   ',
+    '            ¦   /\\  /\\   ¦  (({E})(-))  ¦  (  ><  )  ¦   `----´   ',
+  ),
+  penguin: spriteFrames(
+    '            ¦  .---.     ¦  ({E}>{E})     ¦ /(   )\\    ¦  `---´     ',
+    '            ¦  .---.     ¦  ({E}>{E})     ¦ |(   )|    ¦  `---´     ',
+    '  .---.     ¦  ({E}>{E})     ¦ /(   )\\    ¦  `---´     ¦   ~ ~      ',
+  ),
+  turtle: spriteFrames(
+    '            ¦   _,--._   ¦  ( {E}  {E} )  ¦ /[______]\\ ¦  ``    ``  ',
+    '            ¦   _,--._   ¦  ( {E}  {E} )  ¦ /[______]\\ ¦   ``  ``   ',
+    '            ¦   _,--._   ¦  ( {E}  {E} )  ¦ /[======]\\ ¦  ``    ``  ',
+  ),
+  snail: spriteFrames(
+    '            ¦ {E}    .--.  ¦  \\  ( @ )  ¦   \\_`--´   ¦  ~~~~~~~   ',
+    '            ¦  {E}   .--.  ¦  |  ( @ )  ¦   \\_`--´   ¦  ~~~~~~~   ',
+    '            ¦ {E}    .--.  ¦  \\  ( @  ) ¦   \\_`--´   ¦   ~~~~~~   ',
+  ),
+  ghost: spriteFrames(
+    '            ¦   .----.   ¦  / {E}  {E} \\  ¦  |      |  ¦  ~`~``~`~  ',
+    '            ¦   .----.   ¦  / {E}  {E} \\  ¦  |      |  ¦  `~`~~`~`  ',
+    '    ~  ~    ¦   .----.   ¦  / {E}  {E} \\  ¦  |      |  ¦  ~~`~~`~~  ',
+  ),
+  axolotl: spriteFrames(
+    '            ¦}~(______)~{¦}~({E} .. {E})~{¦  ( .--. )  ¦  (_/  \\_)  ',
+    '            ¦~}(______){~¦~}({E} .. {E}){~¦  ( .--. )  ¦  (_/  \\_)  ',
+    '            ¦}~(______)~{¦}~({E} .. {E})~{¦  (  --  )  ¦  ~_/  \\_~  ',
+  ),
+  capybara: spriteFrames(
+    '            ¦  n______n  ¦ ( {E}    {E} ) ¦ (   oo   ) ¦  `------´  ',
+    '            ¦  n______n  ¦ ( {E}    {E} ) ¦ (   Oo   ) ¦  `------´  ',
+    '    ~  ~    ¦  u______n  ¦ ( {E}    {E} ) ¦ (   oo   ) ¦  `------´  ',
+  ),
+  cactus: spriteFrames(
+    '            ¦ n  ____  n ¦ | |{E}  {E}| | ¦ |_|    |_| ¦   |    |   ',
+    '            ¦    ____    ¦ n |{E}  {E}| n ¦ |_|    |_| ¦   |    |   ',
+    ' n        n ¦ |  ____  | ¦ | |{E}  {E}| | ¦ |_|    |_| ¦   |    |   ',
+  ),
+  robot: spriteFrames(
+    '            ¦   .[||].   ¦  [ {E}  {E} ]  ¦  [ ==== ]  ¦  `------´  ',
+    '            ¦   .[||].   ¦  [ {E}  {E} ]  ¦  [ -==- ]  ¦  `------´  ',
+    '     *      ¦   .[||].   ¦  [ {E}  {E} ]  ¦  [ ==== ]  ¦  `------´  ',
+  ),
+  rabbit: spriteFrames(
+    '            ¦   (\\__/)   ¦  ( {E}  {E} )  ¦ =(  ..  )= ¦  (")__(")  ',
+    '            ¦   (|__/)   ¦  ( {E}  {E} )  ¦ =(  ..  )= ¦  (")__(")  ',
+    '            ¦   (\\__/)   ¦  ( {E}  {E} )  ¦ =( .  . )= ¦  (")__(")  ',
+  ),
+  mushroom: spriteFrames(
+    '            ¦ .-o-OO-o-. ¦(__________)¦   |{E}  {E}|   ¦   |____|   ',
+    '            ¦ .-O-oo-O-. ¦(__________)¦   |{E}  {E}|   ¦   |____|   ',
+    '   . o  .   ¦ .-o-OO-o-. ¦(__________)¦   |{E}  {E}|   ¦   |____|   ',
+  ),
+  chonk: spriteFrames(
+    '            ¦  /\\    /\\  ¦ ( {E}    {E} ) ¦ (   ..   ) ¦  `------´  ',
+    '            ¦  /\\    /|  ¦ ( {E}    {E} ) ¦ (   ..   ) ¦  `------´  ',
+    '            ¦  /\\    /\\  ¦ ( {E}    {E} ) ¦ (   ..   ) ¦  `------´~ ',
+  ),
+}
+const IDLE_SEQUENCE = [0, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 2, 0, 0, 0]
+
+const RARITY_THRESHOLDS = [
+  { rarity: 'common',    max: 60  },
+  { rarity: 'uncommon',  max: 85  },
+  { rarity: 'rare',      max: 95  },
+  { rarity: 'epic',      max: 99  },
+  { rarity: 'legendary', max: 100 },
+]
+
+function pick(rand, arr) {
+  return arr[Math.floor(rand() * arr.length)]
+}
+
+function rollStats(rand, rarity) {
+  const floor = RARITY_FLOOR[rarity]
+  const peak = pick(rand, STAT_NAMES)
+  let dump = pick(rand, STAT_NAMES)
+  while (dump === peak) dump = pick(rand, STAT_NAMES)
+
+  const stats = {}
+  for (const name of STAT_NAMES) {
+    if (name === peak) stats[name] = Math.min(100, floor + 50 + Math.floor(rand() * 30))
+    else if (name === dump) stats[name] = Math.max(1, floor - 10 + Math.floor(rand() * 15))
+    else stats[name] = floor + Math.floor(rand() * 40)
+  }
+  return stats
+}
+
+function generateBuddy(userId, useBunHash = true) {
+  const salt = 'friend-2026-401'
+  const seed = useBunHash ? hashBun(userId + salt) : hashFnv1a(userId + salt)
+  const rand = mulberry32(seed)
+  const roll = rand() * 100
+  let rarity = 'legendary'
+  for (const { rarity: r, max } of RARITY_THRESHOLDS) {
+    if (roll < max) { rarity = r; break }
+  }
+
+  const species = pick(rand, SPECIES)
+  const eye = pick(rand, EYES)
+  const hat = rarity === 'common' ? 'none' : pick(rand, HATS)
+  const shiny = rand() < 0.01
+  const stats = rollStats(rand, rarity)
+  return { rarity, species, eye, hat, shiny, stats }
+}
+
+// ── 搜索生成器 ────────────────────────────────────────────
+
+const CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789'
+const SHORT_LENGTH_COUNTS = [CHARS.length, CHARS.length ** 2, CHARS.length ** 3, CHARS.length ** 4]
+const SHORT_TOTAL = SHORT_LENGTH_COUNTS.reduce((sum, count) => sum + count, 0)
+const SEARCH_TOTALS = {
+  numbers: 9999999,
+  short: SHORT_TOTAL,
+}
+
+function fastRandomHex() {
+  let out = ''
+  while (out.length < 64) out += Math.random().toString(16).slice(2)
+  return out.slice(0, 64)
+}
+
+function* numberGenerator() {
+  for (let n = 1; n <= 9999999; n++) yield String(n)
+}
+
+function* shortGenerator() {
+  for (const a of CHARS) {
+    yield a
+    for (const b of CHARS) {
+      yield a + b
+      for (const c of CHARS) {
+        yield a + b + c
+        for (const d of CHARS) yield a + b + c + d
+      }
+    }
+  }
+}
+
+function* makeGenerator(mode) {
+  if (mode === 'randomHex') {
+    while (true) yield fastRandomHex()
+    return
+  }
+  if (mode === 'numbers') {
+    yield* numberGenerator()
+    return
+  }
+  if (mode === 'short') {
+    yield* shortGenerator()
+  }
+}
+
+function* numberGeneratorSharded(shardIndex, shardCount) {
+  for (let n = 1 + shardIndex; n <= 9999999; n += shardCount) yield String(n)
+}
+
+function toBaseWord(index, length) {
+  let out = ''
+  let rest = index
+  for (let i = 0; i < length; i++) {
+    out = CHARS[rest % CHARS.length] + out
+    rest = Math.floor(rest / CHARS.length)
+  }
+  return out
+}
+
+function indexToShortId(index) {
+  let offset = index
+  for (let length = 1; length <= SHORT_LENGTH_COUNTS.length; length++) {
+    const block = SHORT_LENGTH_COUNTS[length - 1]
+    if (offset < block) return toBaseWord(offset, length)
+    offset -= block
+  }
+  return null
+}
+
+function* shortGeneratorSharded(shardIndex, shardCount) {
+  for (let index = shardIndex; index < SHORT_TOTAL; index += shardCount) {
+    const value = indexToShortId(index)
+    if (value) yield value
+  }
+}
+
+function* makeShardedGenerator(mode, shardIndex, shardCount) {
+  if (mode === 'randomHex') {
+    while (true) yield fastRandomHex()
+    return
+  }
+  if (mode === 'numbers') {
+    yield* numberGeneratorSharded(shardIndex, shardCount)
+    return
+  }
+  yield* shortGeneratorSharded(shardIndex, shardCount)
+}
+
+function normalizeWorkerBound(value) {
+  if (value === '' || value == null) return ''
+  const num = Number(value)
+  if (!Number.isFinite(num)) return ''
+  return Math.max(0, Math.min(100, Math.round(num)))
+}
+
+function matchesBuddyFilters(buddy, filters) {
+  if (filters.rarity !== 'any' && buddy.rarity !== filters.rarity) return false
+  if (filters.shiny !== 'any' && (filters.shiny === 'true') !== buddy.shiny) return false
+  if (filters.species !== 'any' && buddy.species !== filters.species) return false
+  if (filters.hat !== 'any' && buddy.hat !== filters.hat) return false
+  if (filters.eye !== 'any' && buddy.eye !== filters.eye) return false
+  for (const statName of STAT_NAMES) {
+    const range = filters.statRanges?.[statName]
+    if (!range) continue
+    const min = normalizeWorkerBound(range.min)
+    const max = normalizeWorkerBound(range.max)
+    const value = buddy.stats[statName] || 0
+    if (min !== '' && value < min) return false
+    if (max !== '' && value > max) return false
+  }
+  return true
+}
+
+// ── UI 状态 ───────────────────────────────────────────────
+
+let running = false, workers = [], found = [], tried = 0, startTime = 0
+let completedWorkers = 0, stopRequested = false, pendingStopReason = null, activeSearchConfig = null
+const workerTried = new Map()
+let latestFeasibility = { possible: true, title: '当前条件可达', body: '', meta: '' }
+
+const $ = id => document.getElementById(id)
+
+function renderChipGroup(id, options, defaultValue='any') {
+  const el = $(id)
+  el.innerHTML = ''
+  el.dataset.value = defaultValue
+  for (const option of options) {
+    const chip = document.createElement('button')
+    chip.type = 'button'
+    chip.className = 'chip' + (option.value === defaultValue ? ' active' : '')
+    chip.textContent = option.label
+    chip.dataset.value = option.value
+    chip.onclick = () => {
+      el.dataset.value = option.value
+      for (const node of el.querySelectorAll('.chip')) node.classList.toggle('active', node.dataset.value === option.value)
+      updatePreviewFromFilters()
+    }
+    el.appendChild(chip)
+  }
+}
+
+function getChipValue(id) {
+  return $(id).dataset.value || 'any'
+}
+
+function normalizeStatBound(value) {
+  if (value === '' || value == null) return ''
+  const num = Number(value)
+  if (!Number.isFinite(num)) return ''
+  return Math.max(0, Math.min(100, Math.round(num)))
+}
+
+function readStatRanges(applyToInputs = true) {
+  const ranges = {}
+  for (const name of STAT_NAMES) {
+    const minInput = $(`statMin_${name}`)
+    const maxInput = $(`statMax_${name}`)
+    const min = normalizeStatBound(minInput?.value ?? '')
+    const max = normalizeStatBound(maxInput?.value ?? '')
+    const normalizedMin = min === '' ? '' : min
+    const normalizedMax = max === '' ? '' : max
+    if (applyToInputs && minInput) minInput.value = normalizedMin
+    if (applyToInputs && maxInput) maxInput.value = normalizedMax
+
+    let finalMin = normalizedMin
+    let finalMax = normalizedMax
+    if (finalMin !== '' && finalMax !== '' && finalMin > finalMax) {
+      const swap = finalMin
+      finalMin = finalMax
+      finalMax = swap
+      if (applyToInputs && minInput) minInput.value = finalMin
+      if (applyToInputs && maxInput) maxInput.value = finalMax
+    }
+    ranges[name] = { min: finalMin, max: finalMax }
+  }
+  return ranges
+}
+
+function hasActiveStatRanges(statRanges) {
+  return Object.values(statRanges).some(range => {
+    const min = range.min === '' ? 0 : range.min
+    const max = range.max === '' ? 100 : range.max
+    return min > 0 || max < 100
+  })
+}
+
+function renderStatRangeInputs() {
+  const el = $('statRangeFilters')
+  el.innerHTML = STAT_NAMES.map(name => `
+    <div class="stat-range-row">
+      <div class="stat-range-name">
+        <span class="stat-range-name-text">${name}</span>
+        <span class="stat-range-role" id="statRole_${name}"></span>
+      </div>
+      <div class="stat-range-fields">
+        <label class="stat-range-bound">
+          <span class="stat-range-bound-label">MIN</span>
+          <input id="statMin_${name}" class="stat-range-input" type="text" inputmode="numeric" placeholder="0" value="0" />
+        </label>
+        <span class="stat-range-separator">-</span>
+        <label class="stat-range-bound">
+          <span class="stat-range-bound-label">MAX</span>
+          <input id="statMax_${name}" class="stat-range-input" type="text" inputmode="numeric" placeholder="100" value="100" />
+        </label>
+      </div>
+    </div>
+  `).join('')
+}
+
+function resetStatRanges() {
+  for (const name of STAT_NAMES) {
+    $(`statMin_${name}`).value = '0'
+    $(`statMax_${name}`).value = '100'
+  }
+}
+
+function bindStatRangeInputs() {
+  for (const input of $('statRangeFilters').querySelectorAll('input')) {
+    input.addEventListener('focus', event => event.target.select())
+    input.addEventListener('input', event => {
+      const digits = event.target.value.replace(/[^\d]/g, '')
+      if (digits === '') {
+        event.target.value = ''
+        updateFeasibilityState()
+        return
+      }
+      event.target.value = String(Math.max(0, Math.min(100, Number(digits))))
+      updateFeasibilityState()
+    })
+    input.addEventListener('blur', event => {
+      if (event.target.value === '') {
+        updateFeasibilityState()
+        return
+      }
+      event.target.value = String(normalizeStatBound(event.target.value))
+      updateFeasibilityState()
+    })
+  }
+}
+
+function escapeXml(str) {
+  return String(str).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')
+}
+
+function renderSprite(buddy, frame = 0, blink = false) {
+  const frames = SPECIES_ASCII[buddy.species] || SPECIES_ASCII.duck
+  const safeFrame = Math.max(0, frame % frames.length)
+  let lines = frames[safeFrame].map(line => line.replaceAll('{E}', blink ? '-' : buddy.eye))
+  if (buddy.hat !== 'none' && !lines[0].trim()) lines[0] = HAT_TOPS[buddy.hat]
+  if (!lines[0].trim() && frames.every(item => !item[0].trim())) lines = lines.slice(1)
+  return lines
+}
+
+function renderBuddyAsciiHtml(buddy, frame = 0, blink = false) {
+  const lines = renderSprite(buddy, frame, blink)
+  const cls = `buddy-ascii sprite-${buddy.rarity}${buddy.shiny ? ' shiny-sprite' : ''}`
+  return `<pre class="${cls}">${escapeXml(lines.join('\n'))}</pre>`
+}
+
+function buildPreviewBuddyFromFilters() {
+  const buddy = generateBuddy('preview|' + [
+    $('targetRarity').value,
+    $('targetShiny').value,
+    getChipValue('targetSpecies'),
+    getChipValue('targetHat'),
+    getChipValue('targetEye'),
+  ].join('|'), $('hashMode').value === 'bun')
+  const targetRarity = $('targetRarity').value
+  const targetShiny = $('targetShiny').value
+  const targetSpecies = getChipValue('targetSpecies')
+  const targetHat = getChipValue('targetHat')
+  const targetEye = getChipValue('targetEye')
+  if (targetRarity !== 'any') buddy.rarity = targetRarity
+  if (targetShiny !== 'any') buddy.shiny = targetShiny === 'true'
+  if (targetSpecies !== 'any') buddy.species = targetSpecies
+  if (targetHat !== 'any') buddy.hat = targetHat
+  if (targetEye !== 'any') buddy.eye = targetEye
+  if (buddy.rarity === 'common' && targetHat === 'any') buddy.hat = 'none'
+  return buddy
+}
+
+function buildRarityBadgeText(rarity) {
+  return `${RARITY_STARS[rarity] || ''} ${rarity}`.trim()
+}
+
+function renderAnimatedBuddy(targetEl, buddy, size = 'preview') {
+  let tick = 0
+  const render = () => {
+    const step = IDLE_SEQUENCE[tick % IDLE_SEQUENCE.length]
+    const frame = step === -1 ? 0 : step
+    const blink = step === -1
+    targetEl.innerHTML = renderBuddyAsciiHtml(buddy, frame, blink)
+    const pre = targetEl.querySelector('.buddy-ascii')
+    if (pre && size === 'mini') pre.style.fontSize = '0.62rem'
+    tick++
+  }
+  render()
+  return setInterval(render, 500)
+}
+
+let previewTimer = null
+let statsTimer = null
+
+function updatePreviewFromFilters() {
+  const buddy = buildPreviewBuddyFromFilters()
+  if (previewTimer) clearInterval(previewTimer)
+  previewTimer = renderAnimatedBuddy($('previewStage'), buddy, 'preview')
+  $('previewName').textContent = buddy.species
+  $('previewRarityBadge').textContent = buildRarityBadgeText(buddy.rarity)
+  $('previewRarityBadge').className = `rarity-badge rarity-${buddy.rarity}`
+  $('previewSub').innerHTML = `<div><span class="label">Eyes: </span>${buddy.eye}</div><div><span class="label">Hat: </span>${buddy.hat}</div>`
+  $('previewZh').textContent = `生物：${SPECIES_ZH[buddy.species] || buddy.species}　帽子：${HATS_ZH[buddy.hat] || buddy.hat}`
+  $('previewShinyBadge').style.display = buddy.shiny ? 'block' : 'none'
+  updateFeasibilityState()
+}
+
+function createMiniPreviewHtml(buddy) {
+  return `<div class="preview-mini" aria-hidden="true">${renderBuddyAsciiHtml(buddy)}</div>`
+}
+
+function renderStatsHtml(stats) {
+  return `<div class="result-stats">${STAT_NAMES.map(name => {
+    const value = stats[name]
+    const valueClass = value === 100 ? 'stat-line-value is-max' : 'stat-line-value'
+    return `<div class="stat-line"><span class="stat-line-label">${name}</span><span class="stat-bar"><span class="stat-bar-fill" style="width:${Math.max(0, Math.min(100, value))}%;background:${STAT_COLORS[name]}"></span></span><span class="${valueClass}">${value}</span></div>`
+  }).join('')}</div>`
+}
+
+function setResultListMessage(message) {
+  $('resultList').innerHTML = `<p class="log-info" style="font-size:.85em">${message}</p>`
+}
+
+function log(msg, cls='log-info') {
+  const el = $('log')
+  const line = document.createElement('div')
+  line.className = cls
+  line.textContent = msg
+  el.appendChild(line)
+  while (el.children.length > 250) el.removeChild(el.firstChild)
+  el.scrollTop = el.scrollHeight
+}
+
+async function copyUid(btn, text) {
+  const originalText = btn.textContent;
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const input = document.createElement('textarea');
+      input.value = text;
+      input.setAttribute('readonly', '');
+      input.style.position = 'absolute';
+      input.style.left = '-9999px';
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+    }
+    // 成功反馈样式
+    btn.textContent = '✓ 已复制';
+    btn.style.color = '#bbf7d0';
+    btn.style.borderColor = 'rgba(74, 222, 128, 0.35)';
+    btn.style.background = 'rgba(34, 197, 94, 0.16)';
+  } catch (e) {
+    btn.textContent = '! 失败';
+  }
+  // 1.4秒后恢复原状
+  setTimeout(() => {
+    btn.textContent = originalText;
+    btn.style.color = '';
+    btn.style.borderColor = '';
+    btn.style.background = '';
+  }, 1400);
+}
+
+function buildResultItem(uid, buddy) {
+  const shinyHtml = buddy.shiny ? `<div class="shiny-badge">✨ SHINY ✨</div>` : ''
+  const speciesZh = SPECIES_ZH[buddy.species] || buddy.species
+  const hatZh = HATS_ZH[buddy.hat] || buddy.hat
+  const item = document.createElement('div')
+  item.className = 'result-item'
+  item.innerHTML = `
+    <div class="result-main">
+      <div class="sprite-area">
+        ${createMiniPreviewHtml(buddy)}
+        ${shinyHtml}
+      </div>
+      <div class="result-body info-area">
+        <div class="species-name">${buddy.species}</div>
+        <div class="rarity-badge rarity-${buddy.rarity}">${buildRarityBadgeText(buddy.rarity)}</div>
+        <div class="result-meta detail-rows">
+          <div><span class="label">Eyes: </span>${buddy.eye}</div>
+          <div><span class="label">Hat: </span>${buddy.hat}</div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="label">UID: </span><span class="uid">${uid}</span>
+            <button class="copy-btn" style="margin: 0; padding: 4px 10px; font-size: 0.75rem;" onclick="copyUid(this, '${uid}')">复制</button>
+          </div>
+        </div>
+        <div class="result-zh">生物：${speciesZh}　帽子：${hatZh}</div>
+        ${renderStatsHtml(buddy.stats)}
+      </div>
+    </div>
+  `
+  return item
+}
+
+function appendResults(results) {
+  if (!results.length) return
+  const list = $('resultList')
+  if (list.querySelector('.log-info')) list.innerHTML = ''
+  const fragment = document.createDocumentFragment()
+  for (const { uid, buddy } of results) {
+    found.push({ uid, ...buddy })
+    fragment.appendChild(buildResultItem(uid, buddy))
+    const prefix = buddy.shiny ? '✨ SHINY ' : ''
+    const shortUid = uid.length > 20 ? uid.slice(0, 12) + '...' : uid
+    log(`✅ 找到: userID="${shortUid}" → ${prefix}${buddy.species} [${buddy.rarity}] eye=${buddy.eye} hat=${buddy.hat}`,
+      buddy.shiny ? 'log-shiny' : 'log-found')
+  }
+  list.appendChild(fragment)
+  $('statFound').textContent = found.length.toLocaleString()
+}
+
+function formatElapsedTime(elapsedMs) {
+  const safeMs = Math.max(0, Math.floor(elapsedMs || 0))
+  if (safeMs < 1000) return `${safeMs}ms`
+
+  const day = 86400000
+  const hour = 3600000
+  const minute = 60000
+  const second = 1000
+
+  if (safeMs < minute) {
+    const seconds = Math.floor(safeMs / second)
+    const ms = safeMs % second
+    return `${seconds}s${ms ? `${ms}ms` : ''}`
+  }
+
+  if (safeMs < hour) {
+    const minutes = Math.floor(safeMs / minute)
+    const seconds = Math.floor((safeMs % minute) / second)
+    return `${minutes}m${seconds ? `${seconds}s` : ''}`
+  }
+
+  if (safeMs < day) {
+    const hours = Math.floor(safeMs / hour)
+    const minutes = Math.floor((safeMs % hour) / minute)
+    const seconds = Math.floor((safeMs % minute) / second)
+    return `${hours}h${minutes ? `${minutes}m` : ''}${seconds ? `${seconds}s` : ''}`
+  }
+
+  const days = Math.floor(safeMs / day)
+  const hours = Math.floor((safeMs % day) / hour)
+  const minutes = Math.floor((safeMs % hour) / minute)
+  const seconds = Math.floor((safeMs % minute) / second)
+  return `${days}day${hours ? `${hours}h` : ''}${minutes ? `${minutes}m` : ''}${seconds ? `${seconds}s` : ''}`
+}
+
+function stopStatsTicker() {
+  if (!statsTimer) return
+  clearInterval(statsTimer)
+  statsTimer = null
+}
+
+function startStatsTicker() {
+  stopStatsTicker()
+  statsTimer = setInterval(() => {
+    if (running) updateStats()
+  }, 100)
+}
+
+function updateStats() {
+  const elapsedMs = startTime ? Math.max(0, Date.now() - startTime) : 0
+  const elapsed = elapsedMs / 1000
+  const speed = elapsed > 0 ? Math.round(tried / elapsed) : 0
+  $('statTried').textContent = tried.toLocaleString()
+  $('statSpeed').textContent = speed.toLocaleString()
+  $('statElapsed').textContent = formatElapsedTime(elapsedMs)
+}
+
+function updateProgress(mode = $('searchMode').value) {
+  if (mode === 'randomHex') {
+    $('progressFill').style.width = Math.min((tried % 1000000) / 1000000 * 100, 100) + '%'
+    return
+  }
+  const total = SEARCH_TOTALS[mode] || 1
+  $('progressFill').style.width = Math.min(tried / total * 100, 99.9) + '%'
+}
+
+function setControlsDisabled(disabled) {
+  for (const id of ['targetRarity', 'targetShiny', 'hashMode', 'searchMode', 'maxResults']) {
+    $(id).disabled = disabled
+  }
+  for (const groupId of ['targetSpecies', 'targetHat', 'targetEye']) {
+    for (const chip of $(groupId).querySelectorAll('.chip')) chip.disabled = disabled
+  }
+  for (const input of $('statRangeFilters').querySelectorAll('input')) input.disabled = disabled
+}
+
+function getSearchConfig() {
+  const useBunHash = $('hashMode').value === 'bun'
+  const maxResults = parseInt($('maxResults').value) || 20
+  const statRanges = readStatRanges()
+  return {
+    searchMode: $('searchMode').value,
+    useBunHash,
+    maxResults,
+    filters: {
+      rarity: $('targetRarity').value,
+      shiny: $('targetShiny').value,
+      species: getChipValue('targetSpecies'),
+      hat: getChipValue('targetHat'),
+      eye: getChipValue('targetEye'),
+      statRanges,
+    },
+    tuning: getAutoSearchTuning({ searchMode: $('searchMode').value, useBunHash, maxResults }),
+  }
+}
+
+function allFiltersAreAny(filters) {
+  return [filters.rarity, filters.shiny, filters.species, filters.hat, filters.eye].every(value => value === 'any')
+    && !hasActiveStatRanges(filters.statRanges)
+}
+
+function getSearchSummary(config) {
+  const hashLabel = config.useBunHash ? 'Bun.hash / wyhash' : 'FNV-1a'
+  const modeLabel = $('searchMode').selectedOptions[0].textContent
+  const activeRanges = STAT_NAMES
+    .map(name => {
+      const range = config.filters.statRanges[name]
+      if (!range) return null
+      const min = range.min === '' ? 0 : range.min
+      const max = range.max === '' ? 100 : range.max
+      if (min <= 0 && max >= 100) return null
+      return `${name} ${min}-${max}`
+    })
+    .filter(Boolean)
+  const statSummary = activeRanges.length ? `属性区间: ${activeRanges.join(', ')}` : '属性区间: 关闭'
+  return `哈希: ${hashLabel}，候选 ID: ${modeLabel}，${statSummary}`
+}
+
+function getAutoSearchTuning({ searchMode, useBunHash, maxResults }) {
+  const cores = navigator.hardwareConcurrency || 4
+  const workerCount = Math.max(1, Math.min(32, cores))
+
+  const batchSizeByMode = useBunHash
+    ? { randomHex: 65536, numbers: 98304, short: 49152 }
+    : { randomHex: 131072, numbers: 196608, short: 98304 }
+
+  return {
+    workerCount,
+    batchSize: batchSizeByMode[searchMode] || batchSizeByMode.short,
+    yieldInterval: useBunHash ? 4096 : 8192,
+  }
+}
+
+function serializeWorkerLiteral(value) {
+  if (typeof value === 'bigint') return `${value}n`
+  if (Array.isArray(value)) return `[${value.map(serializeWorkerLiteral).join(', ')}]`
+  if (value && typeof value === 'object') {
+    return `{ ${Object.entries(value).map(([key, item]) => `${JSON.stringify(key)}: ${serializeWorkerLiteral(item)}`).join(', ')} }`
+  }
+  return JSON.stringify(value)
+}
+
+function buildSearchWorkerSource() {
+  const functions = [
+    hashFnv1a, _wymum, _wymix, _wyr8, _wyr4, _wyr3, wyhash, hashBun,
+    mulberry32, pick, rollStats, generateBuddy,
+    fastRandomHex, numberGeneratorSharded, toBaseWord, indexToShortId,
+    shortGeneratorSharded, makeShardedGenerator, normalizeWorkerBound, matchesBuddyFilters,
+  ].map(fn => fn.toString()).join('\n\n')
+
+  return `
+    const CHARS = ${serializeWorkerLiteral(CHARS)}
+    const SHORT_LENGTH_COUNTS = ${serializeWorkerLiteral(SHORT_LENGTH_COUNTS)}
+    const SHORT_TOTAL = ${SHORT_TOTAL}
+    const RARITY_FLOOR = ${serializeWorkerLiteral(RARITY_FLOOR)}
+    const RARITY_THRESHOLDS = ${serializeWorkerLiteral(RARITY_THRESHOLDS)}
+    const SPECIES = ${serializeWorkerLiteral(SPECIES)}
+    const EYES = ${serializeWorkerLiteral(EYES)}
+    const HATS = ${serializeWorkerLiteral(HATS)}
+    const STAT_NAMES = ${serializeWorkerLiteral(STAT_NAMES)}
+    const _wyp = ${serializeWorkerLiteral(_wyp)}
+    const _M64 = 0xFFFFFFFFFFFFFFFFn
+    const _textEnc = new TextEncoder()
+
+    let running = false
+    let stopRequested = false
+    let generator = null
+    let tried = 0
+    let config = null
+
+    ${functions}
+
+    function finish(reason, results) {
+      running = false
+      postMessage({ type: 'complete', reason, tried, results, searchMode: config.searchMode, workerIndex: config.workerIndex })
+    }
+
+    function searchLoop() {
+      if (!running) return
+      const batchSize = config.tuning.batchSize
+      const yieldInterval = Math.min(batchSize, config.tuning.yieldInterval)
+      const results = []
+      let processed = 0
+
+      function runChunk() {
+        let chunkProcessed = 0
+
+        while (chunkProcessed < yieldInterval && processed < batchSize && !stopRequested) {
+          const next = generator.next()
+          if (next.done) {
+            finish('exhausted', results)
+            return
+          }
+
+          chunkProcessed++
+          processed++
+          tried++
+          const uid = next.value
+          const buddy = generateBuddy(uid, config.useBunHash)
+          if (!matchesBuddyFilters(buddy, config.filters)) continue
+
+          results.push({ uid, buddy })
+          if (results.length >= 12) break
+        }
+
+        if ((processed < batchSize && results.length < 12) && !stopRequested) {
+          setTimeout(runChunk, 0)
+          return
+        }
+
+        postMessage({ type: 'progress', tried, results, searchMode: config.searchMode, workerIndex: config.workerIndex })
+
+        if (stopRequested) {
+          finish('stopped', [])
+          return
+        }
+
+        setTimeout(searchLoop, 0)
+      }
+
+      runChunk()
+    }
+
+    self.onmessage = event => {
+      if (event.data.type === 'start') {
+        config = event.data.config
+        running = true
+        stopRequested = false
+        tried = 0
+        generator = makeShardedGenerator(config.searchMode, config.workerIndex, config.workerCount)
+        searchLoop()
+      }
+
+      if (event.data.type === 'stop') {
+        stopRequested = true
+      }
+    }
+  `
+}
+
+const SEARCH_WORKER_URL = URL.createObjectURL(new Blob([buildSearchWorkerSource()], { type: 'text/javascript' }))
+window.addEventListener('beforeunload', () => URL.revokeObjectURL(SEARCH_WORKER_URL), { once: true })
+
+function createSearchWorker() {
+  return new Worker(SEARCH_WORKER_URL)
+}
+
+function finalizeSearch(reason) {
+  running = false
+  for (const item of workers) item.terminate()
+  workers = []
+  completedWorkers = 0
+  stopRequested = false
+  pendingStopReason = null
+  activeSearchConfig = null
+  workerTried.clear()
+  for (const groupId of ['targetSpecies', 'targetHat', 'targetEye']) {
+    for (const chip of $(groupId).querySelectorAll('.chip')) chip.disabled = false
+  }
+  setControlsDisabled(false)
+  updateFeasibilityState()
+  $('btnStop').disabled = true
+  $('btnClear').disabled = false
+
+  if (!found.length) {
+    if (reason === 'stopped') setResultListMessage('已停止，暂无命中结果')
+    else if (reason === 'exhausted') setResultListMessage('搜索完毕，暂无命中结果')
+  }
+
+  if (reason === 'target') {
+    $('statStatus').textContent = `✅ 已找到 ${found.length} 个`
+    log(`🎉 已达到目标数量 (${found.length} 个)，自动停止。`, 'log-info')
+  } else if (reason === 'exhausted') {
+    $('statStatus').textContent = '✅ 搜索完毕'
+    log('🏁 搜索完毕，生成器已耗尽。', 'log-info')
+  } else if (reason === 'stopped') {
+    $('statStatus').textContent = '⏹ 已停止'
+    log('⏹ 搜索已停止，当前已找到的结果已保留。', 'log-info')
+  }
+
+  updateStats()
+  updateProgress()
+}
+
+function requestStopAll(reason) {
+  if (stopRequested) return
+  stopRequested = true
+  pendingStopReason = reason
+  $('btnStop').disabled = true
+  if (reason === 'target') {
+    $('statStatus').textContent = `✅ 已找到 ${found.length} 个，正在停止其余线程...`
+  } else {
+    $('statStatus').textContent = '⏹ 正在停止...'
+    if (!found.length) setResultListMessage('正在停止搜索...')
+  }
+  for (const item of workers) item.postMessage({ type: 'stop' })
+}
+
+function refreshTriedTotal() {
+  tried = Array.from(workerTried.values()).reduce((sum, value) => sum + value, 0)
+}
+
+function handleWorkerMessage(workerIndex, event) {
+  const payload = event.data || {}
+  if (typeof payload.tried === 'number') workerTried.set(workerIndex, payload.tried)
+  refreshTriedTotal()
+
+  if (payload.results && payload.results.length) {
+    const remaining = Math.max(0, (activeSearchConfig?.maxResults || 0) - found.length)
+    if (remaining > 0) appendResults(payload.results.slice(0, remaining))
+  }
+
+  $('statFound').textContent = found.length.toLocaleString()
+  updateStats()
+  updateProgress(payload.searchMode || $('searchMode').value)
+
+  if (!stopRequested && activeSearchConfig && found.length >= activeSearchConfig.maxResults) {
+    requestStopAll('target')
+  }
+
+  if (payload.type !== 'complete') return
+
+  completedWorkers++
+  if (!stopRequested && completedWorkers === workers.length) {
+    finalizeSearch('exhausted')
+    return
+  }
+
+  if (stopRequested && completedWorkers === workers.length) {
+    finalizeSearch(pendingStopReason || payload.reason || 'stopped')
+  }
+}
+
+function start() {
+  if (running) return
+  const config = getSearchConfig()
+  const workerCount = config.tuning.workerCount
+
+  const feasibility = analyzeFilterFeasibility(config.filters)
+  latestFeasibility = feasibility
+  updateFeasibilityState(config.filters)
+  if (!feasibility.possible) {
+    $('statStatus').textContent = '⚠️ 条件无解'
+    setResultListMessage('当前筛选无解，请调整属性区间或稀有度后重试')
+    log(`⚠️ ${feasibility.body}`, 'log-info')
+    return
+  }
+
+  if (allFiltersAreAny(config.filters)) {
+    if (!confirm('⚠️ 当前所有筛选条件都是“任意”，会很快返回前几个命中的结果。确定继续吗？')) return
+  }
+
+  found = []
+  tried = 0
+  startTime = Date.now()
+  startStatsTicker()
+  setResultListMessage('搜索中...')
+  $('log').innerHTML = ''
+  $('progressFill').style.width = '0'
+  $('statFound').textContent = '0'
+  $('statStatus').textContent = '🔍 搜索中'
+  updateStats()
+  $('btnStart').disabled = true
+  $('btnStop').disabled = false
+  $('btnClear').disabled = true
+  setControlsDisabled(true)
+  completedWorkers = 0
+  stopRequested = false
+  pendingStopReason = null
+  activeSearchConfig = config
+  workerTried.clear()
+  running = true
+  log(`开始搜索。${getSearchSummary(config)}`, 'log-info')
+
+  workers = Array.from({ length: workerCount }, (_, workerIndex) => {
+    const nextWorker = createSearchWorker()
+    nextWorker.onmessage = event => handleWorkerMessage(workerIndex, event)
+    nextWorker.postMessage({ type: 'start', config: { ...config, workerIndex, workerCount } })
+    return nextWorker
+  })
+}
+
+function stop() {
+  if (!running || !workers.length) return
+  requestStopAll('stopped')
+}
+
+renderChipGroup('targetSpecies', [{ value: 'any', label: '任意' }, ...SPECIES.map(v => ({ value: v, label: `${v} ${SPECIES_ZH[v] || ''}`.trim() }))])
+renderChipGroup('targetHat', [{ value: 'any', label: '任意' }, ...HATS.map(v => ({ value: v, label: `${v} ${HATS_ZH[v] || ''}`.trim() }))])
+renderChipGroup('targetEye', [{ value: 'any', label: '任意' }, ...EYES.map(v => ({ value: v, label: v }))])
+renderStatRangeInputs()
+resetStatRanges()
+bindStatRangeInputs()
+updateFeasibilityState()
+
+const GUIDE_CODE_PANEL_HTML = `<div class="guide-code-panel"><div class="guide-code-toolbar"><div class="guide-code-title">Companion JSON</div></div><pre class="guide-pre">${[
+  '<span class="guide-code-line"><span class="guide-code-indent">  </span><span class="guide-code-key">"companion"</span><span class="guide-code-punc">: {</span></span>',
+  '<span class="guide-code-line"><span class="guide-code-indent">    </span><span class="guide-code-key">"name"</span><span class="guide-code-punc">: </span><span class="guide-code-string">"claude"</span><span class="guide-code-punc">,</span></span>',
+  '<span class="guide-code-line"><span class="guide-code-indent">    </span><span class="guide-code-key">"personality"</span><span class="guide-code-punc">: </span><span class="guide-code-string">"fuck claude."</span><span class="guide-code-punc">,</span></span>',
+  '<span class="guide-code-line"><span class="guide-code-indent">    </span><span class="guide-code-key">"hatchedAt"</span><span class="guide-code-punc">: </span><span class="guide-code-number">xxxx</span></span>',
+  '<span class="guide-code-line"><span class="guide-code-indent">  </span><span class="guide-code-punc">}</span></span>',
+].join('')}</pre></div>`
+
+const GUIDE_ALERT_HTML = `<div class="guide-alert"><div class="guide-alert-title">Claude Code &gt;= 2.1.90 兼容提醒</div><div class="guide-alert-body">打开 Claude 的配置文件 <span class="guide-copy-inline"><code class="inline-code inline-code-wrap">%USERPROFILE%\\.claude\\settings.json</code><button type="button" class="guide-copy-btn" data-copy="%USERPROFILE%\\.claude\\settings.json" aria-label="复制 settings.json 路径"></button></span>，删除 <span class="guide-copy-inline"><code class="inline-code inline-code-wrap">CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC</code><button type="button" class="guide-copy-btn" data-copy="CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC" aria-label="复制环境变量名"></button></span> 环境变量，后续可加回来</div></div>`
+
+const GUIDE_STEP_BODIES = [
+  `<div class="guide-step-line"><span>在本页筛出想要的</span><code class="inline-code">UID</code></div>`,
+  `<div class="guide-step-line"><span>备份配置文件：</span><span class="guide-copy-inline"><code class="inline-code">%USERPROFILE%\\.claude.json</code><button type="button" class="guide-copy-btn" data-copy="%USERPROFILE%\\.claude.json" aria-label="复制配置文件路径"></button></span></div>`,
+  `<div class="guide-step-line"><span>删除</span><span class="guide-copy-inline"><code class="inline-code">%USERPROFILE%\\.claude.json</code><button type="button" class="guide-copy-btn" data-copy="%USERPROFILE%\\.claude.json" aria-label="复制配置文件路径"></button></span><span>文件中</span><span class="guide-copy-inline"><code class="inline-code">companion</code><button type="button" class="guide-copy-btn" data-copy="companion" aria-label="复制 companion 字段名"></button></span><span>这个json片段</span></div>${GUIDE_CODE_PANEL_HTML}`,
+  `<div class="guide-step-line"><span>替换</span><span class="guide-copy-inline"><code class="inline-code">%USERPROFILE%\\.claude.json</code><button type="button" class="guide-copy-btn" data-copy="%USERPROFILE%\\.claude.json" aria-label="复制配置文件路径"></button></span><span>文件中</span><span class="guide-copy-inline"><code class="inline-code">"userID": "xxxxxxx",</code><button type="button" class="guide-copy-btn" data-copy="userID" aria-label="复制 userID 配置行"></button></span><span>的值为你想要的UID</span></div>`,
+  `<div class="guide-step-line"><span>回到 Claude Code 执行</span><span class="guide-copy-inline"><code class="inline-code">/buddy</code><button type="button" class="guide-copy-btn" data-copy="/buddy" aria-label="复制 /buddy 命令"></button></span></div>`,
+]
+
+function renderUsageGuide() {
+  $('guideBody').innerHTML = `${GUIDE_ALERT_HTML}<div class="guide-steps">${GUIDE_STEP_BODIES.map((body, index) => `<div class="guide-step"><div class="guide-step-index">${index + 1}</div><div class="guide-step-body">${body}</div></div>`).join('')}</div>`
+}
+
+renderUsageGuide()
+
+for (const button of document.querySelectorAll('#usageGuide [data-copy]')) {
+  button.addEventListener('click', async event => {
+    event.preventDefault()
+    event.stopPropagation()
+
+    const btn = event.currentTarget;
+
+    const text = (btn.dataset.copy || '').replace(/\\n/g, '\n')
+    const originalHtml = btn.innerHTML
+    const successLabel = '✓'
+    const errorLabel = '!'
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text)
+      } else {
+        const input = document.createElement('textarea')
+        input.value = text
+        input.setAttribute('readonly', '')
+        input.style.position = 'absolute'
+        input.style.left = '-9999px'
+        document.body.appendChild(input)
+        input.select()
+        document.execCommand('copy')
+        document.body.removeChild(input)
+      }
+
+      btn.textContent = successLabel
+      btn.classList.add('is-copied')
+    } catch {
+      btn.textContent = errorLabel
+    }
+
+    setTimeout(() => {
+      btn.innerHTML = originalHtml
+      btn.classList.remove('is-copied')
+    }, 1400)
+  })
+}
+
+function getRoleBounds(rarity, role) {
+  const floor = RARITY_FLOOR[rarity]
+  if (role === 'peak') return { min: Math.min(100, floor + 50), max: Math.min(100, floor + 79) }
+  if (role === 'dump') return { min: Math.max(1, floor - 10), max: Math.max(1, floor + 4) }
+  return { min: floor, max: floor + 39 }
+}
+
+function formatBounds(bounds) {
+  return bounds.min === bounds.max ? String(bounds.min) : `${bounds.min}-${bounds.max}`
+}
+
+function getAllowedRarities(targetRarity) {
+  return targetRarity === 'any' ? Object.keys(RARITY_FLOOR) : [targetRarity]
+}
+
+function getMergedRoleBounds(rarities, role) {
+  const list = rarities.map(rarity => getRoleBounds(rarity, role))
+  return {
+    min: Math.min(...list.map(item => item.min)),
+    max: Math.max(...list.map(item => item.max)),
+  }
+}
+
+function canHatAppearWithRarity(rarity, hat) {
+  if (hat === 'any') return true
+  if (rarity === 'common') return hat === 'none'
+  return true
+}
+
+function getEffectiveStatRange(range) {
+  return {
+    min: range?.min === '' ? 0 : (range?.min ?? 0),
+    max: range?.max === '' ? 100 : (range?.max ?? 100),
+  }
+}
+
+function rangesIntersect(a, b) {
+  return a.min <= b.max && b.min <= a.max
+}
+
+function buildRarityShapeSummary(rarity) {
+  if (rarity === 'any') {
+    return '全稀有度合并后：高峰 55-100，常规 5-89，低谷 1-54；最多 1 项 >=90，最多 1 项 =100'
+  }
+  const peak = getRoleBounds(rarity, 'peak')
+  const normal = getRoleBounds(rarity, 'normal')
+  const dump = getRoleBounds(rarity, 'dump')
+  return `${RARITY_ZH[rarity] || rarity}：1 个高峰 ${formatBounds(peak)}，3 个常规 ${formatBounds(normal)}，1 个低谷 ${formatBounds(dump)}`
+}
+
+function updateStatRoleHints(filters) {
+  const rarities = getAllowedRarities(filters.rarity).filter(rarity => canHatAppearWithRarity(rarity, filters.hat))
+  const roleBoundsByType = rarities.length
+    ? Object.fromEntries(ROLE_ORDER.map(role => [role, getMergedRoleBounds(rarities, role)]))
+    : null
+
+  for (const statName of STAT_NAMES) {
+    const range = getEffectiveStatRange(filters.statRanges[statName])
+    const el = $(`statRole_${statName}`)
+    if (!el) continue
+
+    if (!roleBoundsByType) {
+      el.innerHTML = '<span class="stat-role-chip is-empty">当前筛选无角色</span>'
+      continue
+    }
+
+    const roles = ROLE_ORDER.filter(role => rangesIntersect(range, roleBoundsByType[role]))
+    el.innerHTML = roles.length
+      ? roles.map(role => `<span class="stat-role-chip is-${role}">${ROLE_LABELS[role]}</span>`).join('')
+      : '<span class="stat-role-chip is-empty">无可用角色</span>'
+  }
+}
+
+function countStatMinsAtLeast(statRanges, threshold) {
+  return STAT_NAMES.filter(name => getEffectiveStatRange(statRanges[name]).min >= threshold).length
+}
+
+function analyzeFilterFeasibility(filters) {
+  const rarities = getAllowedRarities(filters.rarity).filter(rarity => canHatAppearWithRarity(rarity, filters.hat))
+  if (!rarities.length) {
+    return {
+      possible: false,
+      title: '当前条件无解',
+      body: '普通 Common 只会生成 none 帽子，你当前的稀有度和帽子筛选无法同时成立',
+      meta: buildRarityShapeSummary(filters.rarity),
+    }
+  }
+
+  const effectiveRanges = Object.fromEntries(STAT_NAMES.map(name => [name, getEffectiveStatRange(filters.statRanges[name])]))
+
+  for (const rarity of rarities) {
+    const roleBounds = {
+      peak: getRoleBounds(rarity, 'peak'),
+      normal: getRoleBounds(rarity, 'normal'),
+      dump: getRoleBounds(rarity, 'dump'),
+    }
+    for (const peak of STAT_NAMES) {
+      for (const dump of STAT_NAMES) {
+        if (dump === peak) continue
+        let ok = true
+        for (const statName of STAT_NAMES) {
+          const role = statName === peak ? 'peak' : (statName === dump ? 'dump' : 'normal')
+          if (!rangesIntersect(effectiveRanges[statName], roleBounds[role])) {
+            ok = false
+            break
+          }
+        }
+        if (ok) {
+          const extra = filters.shiny === 'true' ? '；如果还要求仅闪光，命中率还要额外乘以 1%' : ''
+          return {
+            possible: true,
+            title: '当前条件可达',
+            body: `当前筛选与算法结构兼容${extra}`,
+            meta: buildRarityShapeSummary(filters.rarity === 'any' ? 'any' : rarity),
+          }
+        }
+      }
+    }
+  }
+
+  const min100Count = countStatMinsAtLeast(filters.statRanges, 100)
+  const min90Count = countStatMinsAtLeast(filters.statRanges, 90)
+  let body = '当前属性区间与固定结构 1 个高峰 + 3 个常规 + 1 个低谷 不兼容'
+  if (min100Count > 1) {
+    body = `算法最多只有 1 项可以等于 100，你当前要求了 ${min100Count} 项达到 100`
+  } else if (min90Count > 1) {
+    body = `算法最多只有 1 项可以达到 90+，你当前要求了 ${min90Count} 项达到 90+`
+  }
+  return {
+    possible: false,
+    title: '当前条件无解',
+    body,
+    meta: buildRarityShapeSummary(filters.rarity),
+  }
+}
+
+function updateFeasibilityState(filters = null) {
+  const currentFilters = filters || {
+    rarity: $('targetRarity').value,
+    shiny: $('targetShiny').value,
+    species: getChipValue('targetSpecies'),
+    hat: getChipValue('targetHat'),
+    eye: getChipValue('targetEye'),
+    statRanges: readStatRanges(false),
+  }
+  latestFeasibility = analyzeFilterFeasibility(currentFilters)
+  $('feasibilityHint').className = `solver-hint ${latestFeasibility.possible ? 'is-ok' : 'is-error'}`
+  $('feasibilityTitle').textContent = latestFeasibility.title
+  $('feasibilityBody').textContent = latestFeasibility.body
+  $('feasibilityMeta').textContent = latestFeasibility.meta || ''
+  $('statRangeHelp').textContent = '算法固定为 1 个高峰属性 + 3 个常规属性 + 1 个低谷属性'
+  updateStatRoleHints(currentFilters)
+  $('btnStart').disabled = running ? true : !latestFeasibility.possible
+  $('btnStart').title = latestFeasibility.possible ? '' : latestFeasibility.body
+}
+
+$('targetRarity').onchange = updatePreviewFromFilters
+$('targetShiny').onchange = updatePreviewFromFilters
+$('hashMode').onchange = updatePreviewFromFilters
+$('btnStart').onclick = start
+$('btnStop').onclick = stop
+$('btnClear').onclick = () => {
+  if (running) return
+  found = []
+  tried = 0
+  startTime = 0
+  stopStatsTicker()
+  setResultListMessage('已清空')
+  $('statFound').textContent = '0'
+  $('statStatus').textContent = '待机'
+  $('progressFill').style.width = '0'
+  $('log').innerHTML = ''
+  resetStatRanges()
+  updateFeasibilityState()
+  updateStats()
+}
+
+updatePreviewFromFilters()
+updateStats()
+</script>
+</body>
+</html>
